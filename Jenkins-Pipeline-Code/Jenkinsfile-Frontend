@@ -5,7 +5,7 @@ pipeline {
         nodejs 'nodejs'
     }
     environment  {
-        SCANNER_HOME=tool 'sonar-token'
+        SCANNER_HOME=tool 'sonar-scanner'
         AWS_ACCOUNT_ID = credentials('account-id')
         AWS_ECR_REPO_NAME = credentials('Front _END')
         AWS_DEFAULT_REGION = 'us-west-2'
@@ -25,12 +25,10 @@ pipeline {
         stage('Sonarqube Analysis') {
             steps {
                 dir('client') {
-                   sonar-scanner \
-  -Dsonar.projectKey=three-tier-frontend \
-  -Dsonar.sources=. \
-  -Dsonar.host.url=http://35.88.144.245:9000 \
-  -Dsonar.login=squ_8dd23a7439a90e7ca350ec552a2eeabcb08c2504
-
+                    withSonarQubeEnv('sonar-server') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectName=three-tier-frontend \
+                        -Dsonar.projectKey=three-tier-frontend '''
                     }
                 }
             }
@@ -76,7 +74,7 @@ pipeline {
         }
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/CloudTechDevOps/2nd10WeeksofCloudOps-main.git'
+                git branch: 'main', url: 'https://github.com/keerthana1924/2nd10WeeksofCloudOps-main.git'
             }
         }
         stage('Update Deployment file') {
@@ -86,7 +84,7 @@ pipeline {
             }
             steps {
                 dir('kubernetes-files') {
-                    withCredentials([string(credentialsId: 'my-git-pattoken', variable: 'git_token')]) {
+                    withCredentials([string(credentialsId: 'pat-token', variable: 'git_token')]) {
                         sh '''
                             git config user.email "keerthanachennepalli@gmail.com"
                             git config user.name "keerthana1924"
